@@ -68,7 +68,12 @@ export function useLeadsManager() {
       return "light";
     }
 
-    return window.localStorage.getItem("lead-theme") || "light";
+    try {
+      return window.localStorage.getItem("lead-theme") || "light";
+    } catch (e) {
+      console.warn("Failed to read theme from localStorage:", e);
+      return "light";
+    }
   });
 
   const hasFilters = Boolean(search.trim() || statusFilter || sourceFilter);
@@ -88,8 +93,12 @@ export function useLeadsManager() {
       document.documentElement.dataset.theme = theme;
     }
 
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("lead-theme", theme);
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("lead-theme", theme);
+      }
+    } catch (e) {
+      console.warn("Failed to write theme to localStorage:", e);
     }
   }, [theme]);
 
