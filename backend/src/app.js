@@ -12,6 +12,10 @@ export function createServer() {
   app.use(express.json());
   app.use(morgan("dev"));
 
+  app.get("/", (req, res) => {
+    res.json({ message: "Lead Management API is running", status: "ok" });
+  });
+
   app.use("/health", healthRouter);
   app.use("/api/leads", leadsRouter);
 
