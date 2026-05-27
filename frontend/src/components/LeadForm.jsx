@@ -1,6 +1,7 @@
 import React from "react";
 import Plus from "lucide-react/dist/esm/icons/plus.js";
 import { SOURCES } from "../constants.js";
+import { COUNTRIES } from "../utils/phone.js";
 
 export default function LeadForm({
   form,
@@ -39,16 +40,35 @@ export default function LeadForm({
 
       <label>
         Phone
-        <input
-          required
-          maxLength={25}
-          inputMode="tel"
-          value={form.phone}
-          onChange={(event) => onChange("phone", event.target.value)}
-          onBlur={() => onBlur("phone")}
-          placeholder="+91 98765 43210"
-          aria-invalid={showError("phone")}
-        />
+        <div className="phone-input-group">
+          <select
+            className="country-select"
+            value={form.countryCode || "IN"}
+            onChange={(event) => onChange("countryCode", event.target.value)}
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.emoji} {c.prefix || "+... "}
+              </option>
+            ))}
+          </select>
+          <input
+            required
+            maxLength={25}
+            inputMode="tel"
+            value={form.phone}
+            onChange={(event) => onChange("phone", event.target.value)}
+            onBlur={() => onBlur("phone")}
+            placeholder={
+              form.countryCode === "US" ? "(555) 555-5555" :
+              form.countryCode === "GB" ? "7700 900077" :
+              form.countryCode === "AU" ? "412 345 678" :
+              form.countryCode === "SG" ? "8123 4567" :
+              "98765 43210"
+            }
+            aria-invalid={showError("phone")}
+          />
+        </div>
         {showError("phone") && <span className="field-error">{errors.phone}</span>}
       </label>
 

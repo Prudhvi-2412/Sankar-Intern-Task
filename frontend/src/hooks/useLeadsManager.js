@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { createLead, fetchAllLeads, fetchLeads, removeLead, updateLead, updateLeadStatus } from "../api/leadsApi.js";
 import { DEFAULT_PAGE_SIZE, SOURCES, emptyLead } from "../constants.js";
-import { normalizePhone } from "../utils/phone.js";
+import {
+  COUNTRIES,
+  getCountryCodeFromPhone,
+  validatePhoneByCountry,
+  formatPhoneForSubmit,
+  getLocalNumberOnly,
+  normalizePhone
+} from "../utils/phone.js";
 
 function createToastId() {
   return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -11,21 +18,32 @@ function buildLeadErrors(form) {
   const errors = {};
   const name = String(form.name || "").trim();
   const phone = String(form.phone || "").trim();
-  const normalizedPhone = normalizePhone(phone);
   const source = String(form.source || "").trim();
+  const countryCode = form.countryCode || "IN";
 
+  // Validate Name
+  const nameRegex = /^[a-zA-Z\s'.\-]+$/;
   if (!name) {
     errors.name = "Name is required.";
   } else if (name.length > 100) {
     errors.name = "Name must be 100 characters or fewer.";
+  } else if (!nameRegex.test(name)) {
+    errors.name = "Name can only contain letters, spaces, hyphens, periods, or apostrophes.";
   }
 
+  // Validate Phone
   if (!phone) {
     errors.phone = "Phone is required.";
-  } else if (normalizedPhone.length < 7 || normalizedPhone.length > 15) {
-    errors.phone = "Enter a valid phone number with 7 to 15 digits.";
+  } else if (!validatePhoneByCountry(phone, countryCode)) {
+    const country = COUNTRIES.find((c) => c.code === countryCode);
+    if (country && country.code !== "INTL") {
+      errors.phone = `Enter a valid ${country.name} phone number (${country.digitsLength.join(" or ")} digits).`;
+    } else {
+      errors.phone = "Enter a valid phone number with 7 to 15 digits.";
+    }
   }
 
+  // Validate Source
   if (!SOURCES.includes(source)) {
     errors.source = "Choose a valid source.";
   }
@@ -52,7 +70,10 @@ export function useLeadsManager() {
     total: 0,
     totalPages: 1
   });
-  const [form, setForm] = useState(emptyLead);
+  const [form, setForm] = useState(() => ({
+    ...emptyLead(),
+    countryCode: "IN"
+  }));
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -157,10 +178,7 @@ export function useLeadsManager() {
   function setFieldValue(field, value) {
     const nextForm = { ...form, [field]: value };
     setForm(nextForm);
-
-    if (touched[field] || submitAttempted) {
-      setErrors(buildLeadErrors(nextForm));
-    }
+    setErrors(buildLeadErrors(nextForm));
   }
 
   function handleFieldBlur(field) {
@@ -178,10 +196,13 @@ export function useLeadsManager() {
 
   function startEditLead(lead) {
     setEditingLeadId(lead.id);
+    const countryCode = getCountryCodeFromPhone(lead.phone);
+    const localPhone = getLocalNumberOnly(lead.phone, countryCode);
     setForm({
       name: lead.name,
-      phone: lead.phone,
-      source: lead.source
+      phone: localPhone,
+      source: lead.source,
+      countryCode: countryCode
     });
     setErrors({});
     setTouched({});
@@ -190,7 +211,10 @@ export function useLeadsManager() {
 
   function cancelEditLead() {
     setEditingLeadId(null);
-    setForm(emptyLead());
+    setForm({
+      ...emptyLead(),
+      countryCode: "IN"
+    });
     setErrors({});
     setTouched({});
     setSubmitAttempted(false);
@@ -206,11 +230,17 @@ export function useLeadsManager() {
 
     setSaving(true);
     try {
+      const payload = {
+        name: form.name,
+        phone: formatPhoneForSubmit(form.phone, form.countryCode),
+        source: form.source
+      };
+
       if (editingLeadId) {
-        await updateLead(editingLeadId, form);
+        await updateLead(editingLeadId, payload);
         showToast("Lead updated successfully.", "success");
       } else {
-        await createLead(form);
+        await createLead(payload);
         showToast("Lead added successfully.", "success");
       }
 
