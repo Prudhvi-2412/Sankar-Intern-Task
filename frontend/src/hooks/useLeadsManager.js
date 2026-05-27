@@ -98,6 +98,7 @@ export function useLeadsManager() {
   }, [search, statusFilter, sourceFilter]);
 
   async function loadLeads(targetPage = pagination.page) {
+    const pageNum = typeof targetPage === "number" ? targetPage : pagination.page;
     setLoading(true);
 
     try {
@@ -105,7 +106,7 @@ export function useLeadsManager() {
         search,
         status: statusFilter,
         source: sourceFilter,
-        page: targetPage,
+        page: pageNum,
         limit: pagination.limit
       });
 

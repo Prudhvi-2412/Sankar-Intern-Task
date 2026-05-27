@@ -370,7 +370,7 @@ tbody tr {
     minmax(92px, 0.75fr)
     minmax(92px, 0.75fr)
     minmax(150px, 1.1fr);
-  align-items: center;
+  align-items: stretch;
 }
 
 th,
@@ -380,6 +380,8 @@ td {
   text-align: left;
   vertical-align: middle;
   min-width: 0;
+  display: flex;
+  align-items: center;
 }
 
 th {
@@ -403,11 +405,13 @@ td:nth-child(6) {
 th:nth-child(5),
 th:nth-child(6) {
   text-align: center;
+  justify-content: center;
 }
 
 td:nth-child(5),
 td:nth-child(6) {
   text-align: center;
+  justify-content: center;
 }
 
 .pill {
@@ -462,6 +466,11 @@ td:nth-child(6) {
   height: 160px;
   color: var(--muted);
   text-align: center;
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .row-button {
@@ -517,6 +526,11 @@ td:nth-child(6) {
 .skeleton-row td {
   padding-top: 16px;
   padding-bottom: 16px;
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .skeleton-line {
