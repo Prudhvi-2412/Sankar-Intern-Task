@@ -1,4 +1,7 @@
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const API_URL = rawApiUrl.replace(/\/$/, "").endsWith("/api")
+  ? rawApiUrl.replace(/\/$/, "")
+  : `${rawApiUrl.replace(/\/$/, "")}/api`;
 export const SOURCES = ["Call", "WhatsApp", "Field"];
 export const STATUSES = ["Interested", "Not Interested", "Converted"];
 export const DEFAULT_PAGE_SIZE = 8;
